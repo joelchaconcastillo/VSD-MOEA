@@ -11,7 +11,7 @@ public:
 
 	vector <double> x_var;
 	vector <double> y_obj;
-	vector <int> index_dominate;
+	vector <CIndividual *> ptr_dominate;
 	int    rank;
 	double nearest_variable_distance;
 	double neares_objective_distance;

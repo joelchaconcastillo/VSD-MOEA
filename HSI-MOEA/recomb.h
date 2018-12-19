@@ -5,7 +5,7 @@
 #include "individual.h"
 
 /* Routine for real polynomial mutation of an T */
-void realmutation(CIndividual &ind, double rate)
+void realmutation(CIndividual &ind)
 {
     double rnd, delta1, delta2, mut_pow, deltaq;
     double y, yl, yu, val, xy;
@@ -15,7 +15,7 @@ void realmutation(CIndividual &ind, double rate)
 
     for (int j=0; j<nvar; j++)
     {
-        if (rnd_uni(&rnd_uni_init)<=rate)
+        if (rnd_uni(&rnd_uni_init)<= realm)
         {
             y  = ind.x_var[j];
             yl = vlowBound[j];
@@ -56,7 +56,7 @@ void real_sbx_xoverA(CIndividual &parent1, CIndividual &parent2, CIndividual &ch
     double c1, c2;
     double alpha, beta, betaq;
 	double eta_c = etax;
-    if (rnd_uni(&rnd_uni_init) <= 0.9) 
+    if (rnd_uni(&rnd_uni_init) <= realb) 
     {
         for (int i=0; i<nvar; i++)
         {
@@ -148,12 +148,12 @@ void real_sbx_xoverB (CIndividual &parent1, CIndividual &parent2, CIndividual &c
     double y1, y2, yl, yu;
     double c1, c2;
     double alpha, beta, betaq;
-	double eta_c =2;// etax;
-    if (rnd_uni(&rnd_uni_init) <= 1.0) 
+	double eta_c = etax;
+    if (rnd_uni(&rnd_uni_init) <= realb) 
     {
         for (int i=0; i<nvar; i++)
         {
-            if (rnd_uni(&rnd_uni_init)<=0.9 )
+            if (rnd_uni(&rnd_uni_init) <= 0.5 )
             {
                 if (fabs(parent1.x_var[i]-parent2.x_var[i]) > EPS)
                 {

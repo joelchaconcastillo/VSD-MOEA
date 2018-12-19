@@ -31,10 +31,10 @@ public:
 	vector<CIndividual> child_pop;	// memory solutions
 	void operator=(const MOEA &moea);
 
-//public:
+public:
 //
 //	// algorithm parameters
-//	int     pops;          //  the population size
+	double Initial_lowest_front_current, lowestDistanceFactor; 
 //	int     nfes, max_nfes;          //  the number of function evluations
 
 };
@@ -53,7 +53,7 @@ double MOEA::distance( vector<double> &a, vector<double> &b)
 	double dist = 0 ;
    for(int i = 0; i < a.size(); i++)
 	{
-	   double factor = (a[i]-b[i]);
+	   double factor = (a[i]-b[i])/(vuppBound[i] - vlowBound[i]);
 	   dist += factor*factor;
 	}
    return sqrt(dist);
@@ -76,9 +76,7 @@ void MOEA::init_population()
 
     for(int i=0; i<pops; i++)
 	{
-
-		CSubproblem indiv1, indiv2;
-
+		CIndividual indiv1, indiv2;
 		// Randomize and evaluate solution
 		indiv1.rnd_init();
 		indiv1.obj_eval();
@@ -98,113 +96,187 @@ void MOEA::operator=(const MOEA &alg)
 }
 void MOEA::evol_population()
 {
-	vector<CIndividual> survivors, penalized;
+	vector<CIndividual *> penalized, survivors;
+
 	//join the offspring and parent populations
-	vector<CIndividual> candidates(population.size()+child_pop.size());
-	candidates.insert(candidates.end(), population.begin(), population.end());
-	candidates.insert(candidates.end(), child_pop.begin(), child_pop.end());
+	vector<CIndividual *> candidates;
+	for(int i = 0; i < pops; i++)
+	{
+	  candidate.push_back( &(population[i]));
+	  candidate.push_back( &(child_pop[i]));
+	}
 
 	fast_sort_non_dominated(candidates); //computing the rank of each candidate individual...
-
-	//select the "best" individuals of candidate in survivors...
+	//select the "best" individuals that owns to candidate set and are moved in survivors set...
 	select_first_survivors(survivors, candidates);
 	//update the diversity-factor-parameter...	
 	update_diversity_factor();
-
-
- 
-       //Pre-computing the neares distances both objective and decision spaces..
-	
-	for(int i = 0; i < current.size(); i++)
-	{
-	    current[i].nearest_variable_distance = INFINITY;
-	    current[i].neares_objective_distance = INFINITY;
-	   for(int j = 0; j < survivors.size(); j++)
-	   {
-		current[i].nearest_variable_distance = min( current[i].nearest_variable_distance, distance(current[i].x_var, survivors[j].x_var));
-		current[i].neares_objective_distance = min( current[i].neares_objective_distance, distance_improvement(current[i].y_obj, survivors[j].y_obj));
-
-	   }
-	}	
-	while( survivors.size() < pops )
+	//Pre-computing the neares distances both objective and decision spaces..
+	compute_distances(current, survivors);
+       	while( survivors.size() < pops )
 	{
 	  penalize_nearest(current, penalized);//penalize the nearest individuals.. 
 	  if(current.empty())	  
 	     select_farthest_penalized(current, penalized);//in case that all the individuals are penalized pick up the farstest
-
-	  fast_update_non_domianted_front(survivors, current, ); //update the rank of each candidate whitout penalized
+	  fast_update_non_domianted_front(survivors, current); //update the rank of each candidate whitout penalized
 	  select_best_candidate(survivors, current, penalized); // the best candidate is selected considering the improvemente distance, and the rank..
 	}
 	fast_sort_non_dominated(survivors); //computing the rank of each candidate individual...
-	survivors_reproduction(survivors, ); //generate a new population considering the survivors individuals...
+	survivors_reproduction(survivors, child_pop); //generate a new population considering the survivors individuals...
 }
-void select_best_candidate(vector<CIndividual> &survivors, vector<CIndividual> &current, vector<CIndividual> &penalized, vector<CIndividual> &lowes_front_current)
+
+//get the rank of each individual...
+void fast_sort_non_dominated(vector <CIndividual*> &pool)
 {
-	int best_index_lastfront= -1;//the index of current with 
-	 double max_improvement = -INFINITY;
-	  for(int i = 0 ; i < lowes_front_current.size(); i++)
-		{
-			int inner_index = lowes_front_current[i];	
-			if(  max_improvement < curret[inner_index].neares_objective_distance  )
+    for(int i = 0; i < pool.size(); i++)
+    {
+	pool[i]->times_dominated = 0;
+	pool[i]->ptr_dominate.clear();
+	for(int j = 0; j < pool.size(); j++)
+	{
+	    if(i == j) continue;
+	    if( *(pool[i]) < *(pool[j]) ) //the check if pop[i] dominates pop[j], tht '<' is overloaded
+	    {
+		pool[i]->ptr_dominate.push_back(pool[j]);
+	    }
+	    else if( *(pool[j]) < *(pool[i]) )
+	   {
+		population[i]->times_dominated++;	
+	   }
+	}
+	if( population[i]->times_dominated == 0)
+	{
+	  population[i]->rank=0; 
+	}
+    }
+}
+//updates the lowest distance factor of the diversity explicitly promoted
+void update_diversity_factor()
+{
+	double ratio = (double) nfes/max_nfes;
+	lowestDistanceFactor = Initial_lowest_front_current - Initial_lowest_front_current*(ratio/0.9);
+}
+void survivors_reproduction(vector<CIndividual *> &survivors, vector<CIndividual *> &child_pop)
+{
+   //binary tournament selction procedure
+   binary_tournament_selection(survivors, child_pop);
+   //recombination of the individuals, through the SBX code (taken from the nsga-ii code), also the evaluation of the population is performed
+   recombination(child_pop); 
+}
+void recombination(vector<CIndividual *> &child_pop)
+{
+   vector<CIndividual> child_pop2(child_pop.size());
+   
+   child_pop2.insert(child_pop2.end(), child_pop.begin(), child_pop.end()); 
+
+   for(int i = 0; i < child_pop.size(); i+=2)
+    {
+       int indexa = int(rnd_uni(&rnd_uni_init)*pops);
+       int indexb = int(rnd_uni(&rnd_uni_init)*pops);	
+       real_sbx_xoverA( child_pop2[indexa], child_pop2[indexb], child_pop[i], child_pop[i+1])//the crossover probability and index distribution eta are configured in the global.h file
+       realmutation(child_pop[i]); //the index distribution (eta) and  mutation probability are configured in the global.h file
+       realmutation(child_pop[i+1]);
+	child_pop[i].obj_eval();
+	child_pop[i+1].obj_eval();
+    }
+}
+void binary_tournament_selection(vector<CIndividual *> &survivors, vector<CIndividual *> &child_pop)
+{
+   for(int i = 0; i < survivors.size(); i++)
+	{
+	   int indexa = int(rnd_uni(&rnd_uni_init)*pops);
+	   int indexb = int(rnd_uni(&rnd_uni_init)*pops);
+	   if(survivors[indexa].rank < survivors[indexb].rank)
+	      child_pop[i] = survivors[indexa];
+	   else if(survivors[indexa].rank > survivors[indexb].rank)
+	      child_pop[i] = survivors[indexb];
+	   else 
+	   {
+	      child_pop[i] = (rnd_uni(&rnd_uni_init) < 0.5  )? survivors[indexa] :survivors[indexb];
+	   }	
+	}
+}
+void compute_distances(vector< *> &current, vector<CIndividual *> &survivors)
+{
+	for(int i = 0; i < current.size(); i++)
+	{
+	    current[i]->nearest_variable_distance = INFINITY;
+	    current[i]->neares_objective_distance = INFINITY;
+	   for(int j = 0; j < survivors.size(); j++)
+	   {
+		current[i]->nearest_variable_distance = min( current[i]->nearest_variable_distance, distance(current[i]->x_var, survivors[j]->x_var));
+		current[i]->neares_objective_distance = min( current[i]->neares_objective_distance, distance_improvement(current[i]->y_obj, survivors[j]->y_obj));
+	   }
+	}	
+
+}
+void select_best_candidate(vector<CIndividual *> &survivors, vector<CIndividual *> &current, vector<CIndividual *> &penalized)
+{
+	int best_index_lastfront= -1;//the index of current with the farthes improvement distance
+	double max_improvement = -INFINITY;
+	  for(int i = 0 ; i < current.size(); i++)
+	    {
+		   if(current[i]->rank != 0) continue;
+			if(  max_improvement < current[i]->neares_objective_distance  )
 			{
-				max_improvement =  current[best_index_lastfront].neares_objective_distance;
-				best_index_lastfront= inner_index;
+				max_improvement =  current[i]->neares_objective_distance;
+				best_index_lastfront= i;
 			}
-		}
+	    }
 	//update distances of Current and penalized
 	  for(int i = 0 ; i < current.size(); i++)
 	   {
 		if( i != best_index_lastfront) // Avoid updated itself..
 	        {
-		 current[i].nearest_variable_distance = min( current[i].nearest_variable_distance, distance(current[i], current[best_index_lastfront] ) );
-		 current[i].neares_objective_distance = min( current[i].neares_objective_distance, distance_improvement(current[best_index_lastfront], current[i]));
+		 current[i]->nearest_variable_distance = min( current[i]->nearest_variable_distance, distance(current[i]->x_var, current[best_index_lastfront]->x_var ) );
+		 current[i]->neares_objective_distance = min( current[i]->neares_objective_distance, distance_improvement(current[best_index_lastfront]->y_obj, current[i]->y_obj));
 		}
 	   }
 	  for(int i = 0 ; i < penalized.size(); i++)
 	  {
-		penalized[i].nearest_variable_distance = min( penalized[i].nearest_variable_distance, distance( penalized[i], current[best_index_lastfront] ) )  ;
-		penalized[i].neares_objective_distance  =  min( penalized[i].neares_objective_distance, distance_improvement(current[best_index_lastfront], penalized[i]));
+		penalized[i]->nearest_variable_distance = min( penalized[i]->nearest_variable_distance, distance( penalized[i]->x_var, current[best_index_lastfront]->x_var ) )  ;
+		penalized[i]->neares_objective_distance  =  min( penalized[i]->neares_objective_distance, distance_improvement(current[best_index_lastfront]->y_obj, penalized[i]->y_obj));
 	  }
 	  survivors.push_back(current[best_index_lastfront]);
 	  iter_swap(current.begin()+best_index_lastfront, current.end()-1);
 	  current.pop_back();
 }
-void select_farthest_penalized(vector<CIndividual> &current, vector<CIndividual> &penalized)
+void select_farthest_penalized(vector<CIndividual *> &current, vector<CIndividual *> &penalized)
 {
-    	double largestDCN = penalized[0].nearest_variable_distance;
+    	double largestDCN = penalized[0]->nearest_variable_distance;
 	int index_largestDCN=0;
 	for(int i = 0; i < (int)penalized.size(); i++) // get the index of penalized with larges DCN
 	{
-		if(penalized[i].nearest_variable_distance >  largestDCN )
+		if(penalized[i]->nearest_variable_distance >  largestDCN )
 		{
 			index_largestDCN = i;
-			largestDCN = penalized[i].nearest_variable_distance;
+			largestDCN = penalized[i]->nearest_variable_distance;
 		}
 	}
 
 	for(int i = 0 ; i < (int)penalized.size(); i++) //update the nearest distance once that the penalized is moved to candidate (thereafter to survivors)
 	{
 		if( i != index_largestDCN )
-		penalized[i].nearest_variable_distance = min( penalized[i].nearest_variable_distance, distance( penalized[i].x_var, penalized[index_largestDCN].x_var));
+		penalized[i]->nearest_variable_distance = min( penalized[i]->nearest_variable_distance, distance( penalized[i]->x_var, penalized[index_largestDCN]->x_var));
 	}	
 
-	for(int i = 0; i < penalized[index_largestDCN].index_dominate.size(); i++) //update the dominate count 
-          penalized[index_dominate].index_dominate[i].times_dominated++;
+	for(int i = 0; i < penalized[index_largestDCN]->index_dominate.size(); i++) //update the dominate count 
+          penalized[index_dominate]->index_dominate[i]->times_dominated++;
 
 	current.push_back(penalized[index_dominate]);
 	iter_swap(penalized.begin()+index_dominate, penalized.end()-1);
 	penalized.pop_back();
 }
-void penalize_nearest(vector<CIndividual> &current, vector<CIndividual> &penalized)
+void penalize_nearest(vector<CIndividual *> &current, vector<CIndividual *> &penalized)
 {
    	for(int i = survivors.size()-1; i >=0; i--)
 	{	
-		if( survivors[i].nearest_variable_distance < lowestDistanceFactor )
+		if( survivors[i]->nearest_variable_distance < lowestDistanceFactor )
 		{
 			penalized.push_back(survivors[i]);
-			for(int j = 0; j < survivors[i].index_dominate.size(); j++)
+			for(int j = 0; j < survivors[i]->ptr_dominate.size(); j++)
 			{
-				survivors[i].index_dominate[j]->times_dominated--; //decreasing the times in which survivors is dominated, this since penalized individuals are not considered..
+				survivors[i]->ptr_dominate[j]->times_dominated--; //decreasing the times in which survivors is dominated, this since penalized individuals are not considered..
 			}
 			//remove the survivor with index "i"
 			iter_swap(survivors.begin()+i, survivors.end()-1);
