@@ -58,10 +58,10 @@ void PrintHelp()
 {
 	cout << "Instructions:"<<endl;
 	cout << "--Instance NAMEINSTANCE (WFG1)"<<endl;
-	cout << "--Seed seed (299)" <<endl;
-	cout << "--Px 0.9, is the Crossover probability" <<endl;
-	cout << "--Pm 0.3, is the Mutation Probability " << endl;
-	cout << "--Path ./RESULT, is the directory where will save results"<<endl;
+	cout << "--Seed (299)" <<endl;
+	cout << "--Px (0.9), is the Crossover probability" <<endl;
+	cout << "--Pm (1/n), is the Mutation Probability " << endl;
+	cout << "--Path ./RESULT, is the directory where will save results, inside should be POF (fronts) and POS (decision variable fronts) directories"<<endl;
 	cout << "--n 100, is the number of individual by generation"<<endl;
 	cout << "--nfes, 25000, is the number of function evaluations"<<endl;
 	cout << "--Dist_factor 0.75 , initial valor of diversity D"<<endl;
@@ -69,6 +69,7 @@ void PrintHelp()
 	cout << "--param_k distance parameter (just WFG instances)"<<endl;
 	cout << "--nvar number of decision variables"<<endl;
 	cout << "--nobj number of objectives"<<endl;
+	cout << "example: \"./Ejecutable --n 100 --nfes 2500000 --nvar 6 --Instance DTLZ1 --Path . --Dist_factor 0.1 --nobj 2\""<<endl;
 }
 void SetConfiguration(int argc, char*argv[])
 {

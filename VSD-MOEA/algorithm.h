@@ -142,9 +142,11 @@ void MOEA::evol_population()
 	    }
 	}
 	fast_non_dominated_sorting(survivors);//rank the survivors individuals..
+
+
 	//this procedure is necesary since the penalized individuals
 	update_population(survivors, population); //update the parent population 
-	
+
 	reproduction(population, child_pop); //generate a new population considering the survivors individuals...
 }
 void MOEA::fast_non_dominated_sorting(vector <CIndividual*> &survivors)
@@ -183,7 +185,9 @@ void MOEA::fast_non_dominated_sorting(vector <CIndividual*> &survivors)
 }
 void MOEA::update_population(vector<CIndividual*> &survivors, vector<CIndividual> &population)
 {
-   for(int i = 0; i < population.size(); i++) population[i] = *(survivors[i]);
+	vector<CIndividual> pool;
+   for(int i = 0; i < survivors.size(); i++) pool.push_back(*(survivors[i]));
+   for(int i = 0; i < population.size(); i++) population[i] = pool[i];
 }
 void MOEA::update_domianted_information(vector<CIndividual*> &survivors, vector<CIndividual*> &candidates)
 {
@@ -217,6 +221,7 @@ void MOEA::select_first_survivors(vector<CIndividual*> &survivors, vector<CIndiv
 		double bestvector = INFINITY;
 		for(int i = 0; i <  candidates.size(); i++)
 		 {	
+			 if(candidates[i]->times_dominated != 0) continue; //just consider the first front
 		 	  if(grid[i])continue;
 		        double s = 0.0;	
 		        double maxv = -INFINITY;
@@ -228,29 +233,22 @@ void MOEA::select_first_survivors(vector<CIndividual*> &survivors, vector<CIndiv
 			    if(ti > maxv)   maxv=ti;
 		        }
 		         maxv = maxv + 0.0001*s;
-			//maxv = candidates[i]->y_obj[m];
 		        if(bestvector > maxv)
 		        { indxmaxim = i; bestvector = maxv;}
 		  }
 		grid[indxmaxim] = true;
 		BestIndex.push_back(indxmaxim);
 	}
-		std::vector<int>::iterator End;
-		End = std::unique (BestIndex.begin(), BestIndex.end());
-		BestIndex.resize( std::distance(BestIndex.begin(),End));
+	
 		sort(BestIndex.begin(), BestIndex.end()); //sort the indexes and remove from candidates
 
 		for(int i = BestIndex.size()-1; i >= 0 ; i--)
 		{
 			int index = BestIndex[i];
 			survivors.push_back( candidates[index]);
-			for(int m =0; m < nobj; m++)
-			cout << candidates[index]->y_obj[m] << " ";
-			cout << endl;
 			iter_swap(candidates.begin()+index, candidates.end()-1);
 			candidates.pop_back();
 		}
-//		getchar();
 }
 //get the rank of each individual...
 void MOEA::computing_dominate_information(vector <CIndividual*> &pool)
@@ -421,8 +419,11 @@ void MOEA::exec_emo(int run)
 	{
 		evol_population();
 		nfes += pops;
-        save_front(filename2); //save the objective space information
-	cout << lowestDistanceFactor <<endl;
+	    if( !(nfes % (max_nfes/10)  ))
+	    {
+	      cout << "nfes... "<< nfes <<endl;
+              save_front(filename2); //save the objective space information
+	    }
 	}
 	save_pos(filename1); //save the decision variable space information
         save_front(filename2); //save the objective space information
