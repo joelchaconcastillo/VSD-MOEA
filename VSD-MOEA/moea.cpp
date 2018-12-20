@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 	    PrintHelp();
 	    exit(0);
 	 }
-
+	strcpy(currentPATH, ".");
 	SetConfiguration(argc, argv);
 
 

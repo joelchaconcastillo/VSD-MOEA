@@ -1,3 +1,10 @@
+/*==========================================================================
+// //  Author: Carlos Segura, Joel Chacón 
+//     Description: 
+//
+// ===========================================================================*/
+
+
 #ifndef __EVOLUTION_H_
 #define __EVOLUTION_H_
 
@@ -17,8 +24,6 @@ public:
 	virtual ~MOEA();
 
 	void init_population();                  // initialize the population
-
-	void load_parameter();
 
 	void evol_population();                                      
 	void exec_emo(int run);
@@ -428,13 +433,6 @@ void MOEA::exec_emo(int run)
 	save_pos(filename1); //save the decision variable space information
         save_front(filename2); //save the objective space information
 	population.clear();
-}
-/*
-Load the configuration of  each instance
-*/
-void MOEA::load_parameter()
-{
-	char filename[1024];
 }
 void MOEA::save_front(char saveFilename[1024])
 {
