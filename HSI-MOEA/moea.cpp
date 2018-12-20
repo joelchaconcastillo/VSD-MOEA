@@ -1,30 +1,13 @@
 /*==========================================================================
-//  C++ Implementation of MOEA/D Based on Differential Evolution (DE) for Contest Multiobjective
-//  Problems in CEC2009
-//
-//  Author: Hui Li
-//
-//  See the details of MOEA/D-DE and test problems in the following papers
-//
-//  1) H. Li and Q. Zhang, Comparison Between NSGA-II and MOEA/D on a Set of Multiobjective Optimization
-//  Problems with Complicated Pareto Sets, Technical Report CES-476, Department of Computer Science,
-//  University of Essex, 2007
-//
-//  2) H. Li and Q. Zhang, Multiobjective Optimization Problems with Complicated Pareto Sets, MOEA/D and NSGA-II,
-//  IEEE Transaction on Evolutionary Computation, 2008, to appear.
-//
-//  If you have any questions about the codes, please contact
-//  Dr. Hui Li       at   hzl@cs.nott.ac.uk   or
-//  Dr. Qingfu Zhang at   qzhang@essex.ac.uk
-//
-//  Date: 14/NOV/2008
+// //  Author: Carlos Segura, Joel Chacón 
+//     Description: 
 //
 // ===========================================================================*/
 
 
 
 #include "algorithm.h"
-#include <omp.h>
+//#include <omp.h>
 
 void InitializeBounds(int nvar, char * Instance)
 {
@@ -75,13 +58,13 @@ void PrintHelp()
 {
 	cout << "Instructions:"<<endl;
 	cout << "--Instance NAMEINSTANCE (WFG1)"<<endl;
-	cout << "--Seed SeED (299)" <<endl;
+	cout << "--Seed seed (299)" <<endl;
 	cout << "--Px 0.9, is the Crossover probability" <<endl;
 	cout << "--Pm 0.3, is the Mutation Probability " << endl;
 	cout << "--Path ./RESULT, is the directory where will save results"<<endl;
 	cout << "--n 100, is the number of individual by generation"<<endl;
 	cout << "--nfes, 25000, is the number of function evaluations"<<endl;
-	cout << "--Dist_Factor 0.75 , initial valor of diversity D"<<endl;
+	cout << "--Dist_factor 0.75 , initial valor of diversity D"<<endl;
 	cout << "--param_l distance parameter (just WFG instances)"<<endl;
 	cout << "--param_k distance parameter (just WFG instances)"<<endl;
 	cout << "--nvar number of decision variables"<<endl;
@@ -114,7 +97,7 @@ void SetConfiguration(int argc, char*argv[])
 			param_l = atoi(argv[++i]);
 		else if(Terminal == "--param_k")
 			param_k = atoi(argv[++i]);
-		else if(Terminal == "--Dist_Factor")
+		else if(Terminal == "--Dist_factor")
 			Initial_lowest_distance_factor= atof(argv[++i])*sqrt(nvar);
 		else if(Terminal == "--help" || Terminal == "--h")
 			PrintHelp();

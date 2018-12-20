@@ -422,9 +422,7 @@ void NSGAII::Init_NSGAII()
     //Inicialmente Pool_Q es un conjunto vacío...
     while(CriterionStop())
     {
-
 		//cout << "Generation: "<<CurrentGeneration<<endl;
-
           vector<ptrIndividual> CurrentSet1, CurrentSet;
 
 	  
