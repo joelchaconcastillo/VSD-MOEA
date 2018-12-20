@@ -71,81 +71,98 @@ void InitializeBounds(int nvar, char * Instance)
         }
 
 }
+void PrintHelp()
+{
+	cout << "Instructions:"<<endl;
+	cout << "--Instance NAMEINSTANCE (WFG1)"<<endl;
+	cout << "--Seed SeED (299)" <<endl;
+	cout << "--Px 0.9, is the Crossover probability" <<endl;
+	cout << "--Pm 0.3, is the Mutation Probability " << endl;
+	cout << "--Path ./RESULT, is the directory where will save results"<<endl;
+	cout << "--n 100, is the number of individual by generation"<<endl;
+	cout << "--nfes, 25000, is the number of function evaluations"<<endl;
+	cout << "--Dist_Factor 0.75 , initial valor of diversity D"<<endl;
+	cout << "--param_l distance parameter (just WFG instances)"<<endl;
+	cout << "--param_k distance parameter (just WFG instances)"<<endl;
+	cout << "--nvar number of decision variables"<<endl;
+	cout << "--nobj number of objectives"<<endl;
+}
+void SetConfiguration(int argc, char*argv[])
+{
+	for(int i = 1; i < argc ; i++)
+    	{
+		string Terminal(argv[i]);
+		if( Terminal == "--Instance")
+			strcpy(strTestInstance, argv[++i]);
+		else if(Terminal == "--Seed")
+			run = atoi(argv[++i]);
+		else if(Terminal == "--Px")
+			realx = atof(argv[++i]);
+		else if(Terminal == "--Pm")
+			realm= atof(argv[++i]);
+		else if(Terminal == "--Path")
+			strcpy(currentPATH, argv[++i]);
+		else if(Terminal =="--n")
+			pops= atoi(argv[++i]);
+		else if(Terminal =="--nobj")
+			nobj= atoi(argv[++i]);
+		else if(Terminal == "--nfes")
+			max_nfes = atoi(argv[++i]);
+		else if(Terminal == "--nvar")
+			nvar = atoi(argv[++i]);
+		else if(Terminal == "--param_l")
+			param_l = atoi(argv[++i]);
+		else if(Terminal == "--param_k")
+			param_k = atoi(argv[++i]);
+		else if(Terminal == "--Dist_Factor")
+			Initial_lowest_distance_factor= atof(argv[++i])*sqrt(nvar);
+		else if(Terminal == "--help" || Terminal == "--h")
+			PrintHelp();
+		else
+		{
+			cout << Terminal<<endl;
+			cout << "Unknown Argument...";
+			exit(0);
+		}
+	    }
+}
 int main(int argc, char *argv[])
 {
 
-	int pop;
+	if(argc<2)
+         {
+	    
+	    cout << "Unknown Argument.."<<endl;
+	    PrintHelp();
+	    exit(0);
+	 }
 
-	//std::ifstream readf("TestInstance.txt");
-	//std::ifstream readf(argv[1]);
-
-	//int numOfInstance;
-	//readf>>numOfInstance;
-
-	//printf("\n -- %d Instances are being tested ---\n\n", numOfInstance);
-
-//	for(int inst=1; inst<=numOfInstance; inst++)
-	{
-		// the parameter setting of test instance
-		//readf>>strTestInstance;
-		//readf>>nvar;
-		//readf>>nobj;
-		strcpy(strTestInstance, argv[1]);
-		int run = 1;
-
-		run= atoi(argv[2]);
-		nobj = atoi(argv[3]);
-		pops = atoi(argv[4]);
-		max_nfes= atoi(argv[5]);
-
-		if(argc <= 7)
-		   nvar = atoi(argv[6]);
-		else  //WFG instances..
-		{
-		   param_l = atoi(argv[6]);
-		   param_k = atoi(argv[7]);
-		   nvar = param_l + param_k;
-		}
-		InitializeBounds(nvar, strTestInstance);
-
-		//printf("\n -- Instance: %s, %d variables %d objectives di: %f\n\n", strTestInstance, nvar, nobj, Di);
+	SetConfiguration(argc, argv);
 
 
-		clock_t start, temp, finish;
-		double  duration, last = 0;
-		start = clock();
+	InitializeBounds(nvar, strTestInstance);
 
-		std::fstream fout;
-		char logFilename[1024];
-		sprintf(logFilename, "LOG/LOG_MOEAD_%s.dat", strTestInstance);
-		fout.open(logFilename,std::ios::out);
-		fout<<"Inst: "<<strTestInstance<<endl;
-	    fout<<"Time: \n\n";
-		//#pragma omp parallel for	
-		//for(int run=1; run<=35; run++)
-		{
-			//printf("\n -- %d-th run  -- \n", run);
-			MOEA MOEAD;
-		//	MOEAD.load_parameter();
-		//	pop = MOEAD.pops;
-			MOEAD.exec_emo(run);
-			temp = clock();
-			duration = (double)(temp - start) / CLOCKS_PER_SEC;
-			fout<<run<<":"<<duration - last<<" ";
-			last = duration;
-			if(run%10==0) fout<<"\n";
-			//break;
-		}
+	clock_t start, temp, finish;
+	double  duration, last = 0;
+	start = clock();
 
-		fout<<"\n\n";
+	std::fstream fout;
+	char logFilename[1024];
+	sprintf(logFilename, "%s/LOG/LOG_MOEAD_%s.dat", currentPATH, strTestInstance);
+	fout.open(logFilename,std::ios::out);
+	fout<<"Inst: "<<strTestInstance<<endl;
+	fout<<"Time: \n\n";
+	MOEA MOEAD;
+	MOEAD.exec_emo(run);
+	temp = clock();
+	duration = (double)(temp - start) / CLOCKS_PER_SEC;
+	last = duration;
 
-		finish = clock();
-		duration = (double)(finish - start) / CLOCKS_PER_SEC;
+	fout<<"\n\n";
 
+	finish = clock();
+	duration = (double)(finish - start) / CLOCKS_PER_SEC;
+	fout.close();
+	return 0;
 
-		fout<<"Mean  CPU Time  "<<duration/30<<" seconds"<<endl;
-		fout<<"Total CPU Time  "<<duration<<" seconds"<<endl;
-		fout.close();
-
-	}
 }

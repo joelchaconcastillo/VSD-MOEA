@@ -41,7 +41,6 @@ int main(int argc, char *argv[])
 
 	SetConfiguration(argc, argv, ProbCross, ProbMut, Path, SizePool, TotalGenerations, Sed, PeriodReport, Label, Instance, Crossover, Mutation, ParameterDInit);
 
-//	ParameterDInit = ParameterDInit*sqrt(24); 	
  	PrepareDirectory(Path, Instance);
 	int IdCrossover = Str_to_Id_Crossover(Crossover);	
 	int IdMutation = Str_to_Id_Mutation(Mutation);

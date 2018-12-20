@@ -56,7 +56,7 @@ void real_sbx_xoverA(CIndividual &parent1, CIndividual &parent2, CIndividual &ch
     double c1, c2;
     double alpha, beta, betaq;
 	double eta_c = etax;
-    if (rnd_uni(&rnd_uni_init) <= realb) 
+    if (rnd_uni(&rnd_uni_init) <= realx) 
     {
         for (int i=0; i<nvar; i++)
         {
@@ -149,7 +149,7 @@ void real_sbx_xoverB (CIndividual &parent1, CIndividual &parent2, CIndividual &c
     double c1, c2;
     double alpha, beta, betaq;
 	double eta_c = etax;
-    if (rnd_uni(&rnd_uni_init) <= realb) 
+    if (rnd_uni(&rnd_uni_init) <= realx) 
     {
         for (int i=0; i<nvar; i++)
         {
