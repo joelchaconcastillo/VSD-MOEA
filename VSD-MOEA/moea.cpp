@@ -109,6 +109,7 @@ void SetConfiguration(int argc, char*argv[])
 			exit(0);
 		}
 	    }
+	if( realm == -1) realm = 1.0/nvar;
 }
 int main(int argc, char *argv[])
 {

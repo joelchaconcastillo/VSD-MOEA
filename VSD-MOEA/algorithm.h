@@ -295,7 +295,7 @@ void MOEA::recombination(vector<CIndividual> &child_pop)
 	
    for(int i = 0; i < child_pop.size(); i+=2)
     {
-       int indexa = i;//int(rnd_uni(&rnd_uni_init)*pops);
+       int indexa = i;// int(rnd_uni(&rnd_uni_init)*pops);
        int indexb = i+1;//int(rnd_uni(&rnd_uni_init)*pops);	
        real_sbx_xoverA( child_pop2[indexa], child_pop2[indexb], child_pop[i], child_pop[i+1]);//the crossover probability and index distribution eta are configured in the global.h file
        realmutation(child_pop[i]); //the index distribution (eta) and  mutation probability are configured in the global.h file

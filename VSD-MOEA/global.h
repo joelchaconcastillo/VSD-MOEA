@@ -43,7 +43,7 @@ double          scale[100];
 
 int		etax    = 20, 	etam    = 50;   // distribution indexes of crossover and mutation
 
-double  realx=0.9,  realm = 1.0/nvar;    // crossover, mutation, selection probabilities
+double  realx=0.9,  realm = -1.0;    // crossover, mutation, selection probabilities
 int run;
 
 #endif
