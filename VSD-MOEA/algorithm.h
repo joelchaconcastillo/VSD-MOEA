@@ -56,7 +56,7 @@ public:
 public:
 //
 //	// algorithm parameters
-	int nfes;
+	long long int nfes;
 //	int     nfes, max_nfes;          //  the number of function evluations
 
 };
@@ -131,12 +131,17 @@ void MOEA::evol_population()
 	computing_dominate_information(candidates); //computing the dominate count of each candidate individual...
 	//select the "best" individuals that owns to candidate set and are moved in survivors set...
 	select_first_survivors(survivors, candidates);
+	for(int i = 0; i < survivors.size(); i++)
+	cout << survivors[i]->rank<< " ";
+  	cout << endl;
+	cout << nfes <<endl;
 	//update the diversity-factor-parameter...	
 	update_diversity_factor();
 	//Pre-computing the neares distances both objective and decision spaces..
 	compute_distances(candidates, survivors);
        	while( survivors.size() < pops )
 	{
+	//cout << nfes<< "penalized... " << penalized.size() << " candidates... "<<candidates.size() <<endl;
 	  penalize_nearest(candidates, penalized);//penalize the nearest individuals.. 
 	  if(candidates.empty())	  
 	     select_farthest_penalized(survivors, penalized);//in case that all the individuals are penalized pick up the farstest and add it to survirvors
@@ -420,14 +425,24 @@ void MOEA::exec_emo(int run)
 
 	sprintf(filename1,"%s/POS/POS_MOEAD_%s_RUN%d_seed_%d_nobj_%d.dat_bounded",currentPATH, strTestInstance,run, seed, nobj);
 	sprintf(filename2,"%s/POF/POF_MOEAD_%s_RUN%d_seed_%d_nobj_%d.dat_bounded",currentPATH, strTestInstance,run, seed, nobj);
+	save_front(filename2); //save the objective space information
+	save_pos(filename1); //save the decision variable space information
+        long long nfes1 = nfes, nfes2 = nfes;
+        long long countnfes=0;
 	while(nfes < max_nfes )
 	{
+	   nfes1=nfes;
 		evol_population();
 		nfes += pops;
-	    if( !(nfes % (max_nfes/10)  ))
-	    {
-	      cout << "nfes... "<< nfes <<endl;
+	    
+	    nfes2 = nfes;
+	   countnfes += (nfes2 - nfes1);
+	   if(  countnfes > 0.1*max_nfes  )
+	    {	
+	      countnfes -= 0.1*max_nfes;
               save_front(filename2); //save the objective space information
+	      save_pos(filename1); //save the decision variable space information
+	      cout << "nfes... "<< nfes <<endl;
 	    }
 	}
 	save_pos(filename1); //save the decision variable space information
