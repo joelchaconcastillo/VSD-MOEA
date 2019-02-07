@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Getopt::Long;
 
-my $file = "ExecutionFileDiversity";
+my $file = "ExecutionNFES";
 my $fout;
 open($fout, '>' ,$file);
 my $PathAlgorithm =  `cd ..; pwd`;#"/home/joel.chacon/Current/MyResearchTopics/MOEA-D-Diversity/MOEAD-DE/vsd-moead-opt";
@@ -58,8 +58,7 @@ my @Conf =(
 "DTLZ6 12 3",
 "DTLZ7 22 3");
 
-my @DD =("0.0", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0");
-foreach my $Di (@DD)
+for(my $nfes=1; $nfes<=10; $nfes++)
 {
 	foreach my $line (@Conf)
 	{
@@ -69,7 +68,7 @@ foreach my $Di (@DD)
                         my $inst = $configuration2[0];	
                         my $nvar = $configuration2[1];	
                         my $nobj = $configuration2[2];	
-			print $fout "~$PathAlgorithm/Ejecutable --n 100 --nfes 25000000 --nvar $nvar --Instance $inst --Path $PathAlgorithm --Dist_factor $Di --nobj $nobj --Seed $Seed --param_l 20 --param_k 4 \n";
+			print $fout "~$PathAlgorithm/Ejecutable --n 100 --nfes ".($nfes*25000)." --nvar $nvar --Instance $inst --Path $PathAlgorithm --Dist_factor 0.4 --nobj $nobj --Seed $Seed --param_l 20 --param_k 4 \n";
 		}
 	}
 }

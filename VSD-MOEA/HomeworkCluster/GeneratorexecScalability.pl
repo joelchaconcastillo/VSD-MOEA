@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Getopt::Long;
-my $file = "ExecutionFileDiversity";
+my $file = "ExecutionScalability";
 my $fout;
 open($fout, '>' ,$file);
 my $PathAlgorithm =  `cd ..; pwd`;#"/home/joel.chacon/Current/MyResearchTopics/MOEA-D-Diversity/MOEAD-DE/vsd-moead-opt";
@@ -47,9 +47,16 @@ foreach my $v (@Variables)
         {
                 for(my $Sed = 1; $Sed <=35; $Sed++) ##Realizar 35 ejecuciones con distintas semilla de cada instancia..
                 {
+
+#			 my @configuration2 = split ' ', $line;#~ s/ /_/g; 
+#                        my $inst = $configuration2[0];
+#                        my $nvar = $configuration2[1];
+#                        my $nobj = $configuration2[2];
+#                        print $fout "~$PathAlgorithm/Ejecutable --n 100 --nfes ".($nfes*25000)." --nvar $nvar --Instance $inst --Path $PathAlgorithm --Dist_factor 0.4 --nobj $nobj --Seed $Seed --param_l 20 --param_k 4 \n";
+
                       my @configuration2 = split ' ', $configuration;#~ s/ /_/g; 
 
-		     print $fout "~$PathAlgorithm/Ejecutable $configuration2[0] $v $configuration2[1] $Sed $PathAlgorithm \n";
+		     print $fout "~$PathAlgorithm/Ejecutable --n 100 --nfes 25000000 --Instance $configuration2[0] --nvar $v --nobj $configuration2[1] --Seed $Sed --Path $PathAlgorithm --Dist_factor 0.4 \n";
                 }
         }
 

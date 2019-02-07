@@ -25,7 +25,8 @@ int     nvar=10,  nobj=2;                    //  the number of variables and obj
 int pops = 100; //population size
 
 double  lowBound = 0,   uppBound = 1;   //  lower and upper bounds of variables
-double  vlowBound[1000] ,   vuppBound[1000];   //  lower and upper bounds of variables
+double  vlowBound[2000] ,   vuppBound[2000];   //  lower and upper bounds of variables
+double nadir[2000], ideal[2000];
 
 char    strTestInstance[556];
 char    currentPATH[1500];
@@ -39,11 +40,13 @@ long    rnd_uni_init;
 double Initial_lowest_distance_factor=0.2*sqrt(nvar), lowestDistanceFactor; 
 
 //------------- Parameters in VSD-MOEA
-double          scale[100];  
+double          scale[200];  
 
 int		etax    = 2, 	etam    = 50;   // distribution indexes of crossover and mutation
 
 double  realx=0.9,  realm = -1.0;    // crossover, mutation, selection probabilities
 int run;
+
+
 
 #endif

@@ -99,7 +99,7 @@ void SetConfiguration(int argc, char*argv[])
 		else if(Terminal == "--param_k")
 			param_k = atoi(argv[++i]);
 		else if(Terminal == "--Dist_factor")
-			Initial_lowest_distance_factor= atof(argv[++i])*sqrt(nvar);
+			Initial_lowest_distance_factor= atof(argv[++i]);
 		else if(Terminal == "--help" || Terminal == "--h")
 			PrintHelp();
 		else
@@ -110,6 +110,7 @@ void SetConfiguration(int argc, char*argv[])
 		}
 	    }
 	if( realm == -1) realm = 1.0/nvar;
+	Initial_lowest_distance_factor *=sqrt(nvar);
 }
 int main(int argc, char *argv[])
 {
