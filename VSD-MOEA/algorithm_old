@@ -87,11 +87,12 @@ double MOEA::distance_improvement( vector<double> &a, vector<double> &b)
 	double maxd = -INFINITY;
    for(int i = 0; i < a.size(); i++)
 	{
+
 	   double factor = max(0.0, a[i]-b[i]);
 	   dist += factor*factor;
-//	   maxd = max(maxd, max( b[i]-a[i], 0.0));
+	   maxd = max(maxd, max( b[i]-a[i], 0.0));
 	}
-  //      if(dist == 0.0) return -maxd; //in case that this indicator is zero, this mean that it is a dominated individual...
+        if(dist == 0.0) return -maxd; //in case that this indicator is zero, this mean that it is a dominated individual...
    return dist;
    return sqrt(dist);
 }
