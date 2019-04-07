@@ -112,13 +112,14 @@ void CIndividual::operator=(const CIndividual &ind2)
 
 bool CIndividual::operator<(const CIndividual &ind2)
 {
-	bool dominated = true;
+	bool  similar = true;
     for(int n=0; n<nobj; n++)
 	{
 		if(ind2.y_obj[n]<y_obj[n]) return false;
+	        if(fabs(ind2.y_obj[n]-y_obj[n])>1e-5) similar=false;
 	}
-	if(ind2.y_obj==y_obj) return false;
-	return dominated;
+	if(similar) return false;
+	return true;
 }
 
 

@@ -34,7 +34,8 @@ public:
         void penalize_nearest(vector<CIndividual *> &candidates, vector<CIndividual *> &penalized);
         void select_farthest_penalized(vector<CIndividual *> &candidates, vector<CIndividual *> &penalized);
         void select_best_candidate(vector<CIndividual *> &survivors, vector<CIndividual *> &candidates, vector<CIndividual *> &penalized);
-        void compute_distances(vector<CIndividual *> &candidates, vector<CIndividual *> &survivors);
+        void compute_distances_variable(vector<CIndividual *> &candidates, vector<CIndividual *> &survivors);
+        void compute_distances_objective(vector<CIndividual *> &candidates, vector<CIndividual *> &survivors);
         void binary_tournament_selection(vector<CIndividual > &population, vector<CIndividual> &child_pop);
         void recombination(vector<CIndividual> &child_pop);
         void reproduction(vector<CIndividual> &population, vector<CIndividual> &child_pop);
@@ -129,17 +130,16 @@ void MOEA::evol_population()
 	//join the offspring and parent populations
 	vector<CIndividual *> candidates;
 	for(int i = 0; i < pops; i++)
-	{
+	{	
 	  candidates.push_back( &(population[i]));
 	  candidates.push_back( &(child_pop[i]));
 	}
 	computing_dominate_information(candidates); //computing the dominate count of each candidate individual...
-	//select the "best" individuals that owns to candidate set and are moved in survivors set...
-	select_first_survivors(survivors, candidates);
 	//update the diversity-factor-parameter...	
 	update_diversity_factor();
 	//Pre-computing the neares distances both objective and decision spaces..
-	compute_distances(candidates, survivors);
+	compute_distances_variable(candidates, survivors);
+
        	while( survivors.size() < pops )
 	{
 	//cout << nfes<< "penalized... " << penalized.size() << " candidates... "<<candidates.size() <<endl;
@@ -214,7 +214,6 @@ void MOEA::update_domianted_information(vector<CIndividual*> &survivors, vector<
      
      if( !firstfrontcurrent) //this indicates that there is not able a current in the lowest front, so the next front is to be considered
 	{	
-	  
 	   for(int i = 0; i < survivors.size(); i++)
 	   {
 		if(survivors[i]->times_dominated == 0)
@@ -307,7 +306,7 @@ void MOEA::select_first_survivors(vector<CIndividual*> &survivors, vector<CIndiv
 		double bestvector = DBL_MAX;
 		for(int i = 0; i <  candidates.size(); i++)
 		 {	
-			// if(candidates[i]->times_dominated != 0) continue; //just consider the first front
+			if(candidates[i]->times_dominated != 0) continue; //just consider the first front
 		        double s = 0.0;	
 		        double maxv = -DBL_MAX;
 		        for(int k = 0; k < nobj; k++)
@@ -393,15 +392,23 @@ void MOEA::binary_tournament_selection(vector<CIndividual > &population, vector<
 	   }	
 	}
 }
-void MOEA::compute_distances(vector<CIndividual *> &candidates, vector<CIndividual *> &survivors)
+void MOEA::compute_distances_variable(vector<CIndividual *> &candidates, vector<CIndividual *> &survivors)
 {
 	for(int i = 0; i < candidates.size(); i++)
 	{
 	    candidates[i]->nearest_variable_distance = INFINITY;
+	   for(int j = 0; j < survivors.size(); j++)
+		candidates[i]->nearest_variable_distance = min( candidates[i]->nearest_variable_distance, distance(candidates[i]->x_var, survivors[j]->x_var));
+	}	
+
+}
+void MOEA::compute_distances_objective(vector<CIndividual *> &candidates, vector<CIndividual *> &survivors)
+{
+	for(int i = 0; i < candidates.size(); i++)
+	{
 	    candidates[i]->neares_objective_distance = INFINITY;
 	   for(int j = 0; j < survivors.size(); j++)
 	   {
-		candidates[i]->nearest_variable_distance = min( candidates[i]->nearest_variable_distance, distance(candidates[i]->x_var, survivors[j]->x_var));
 		candidates[i]->neares_objective_distance = min( candidates[i]->neares_objective_distance, distance_improvement(survivors[j]->y_obj, candidates[i]->y_obj));
 	   }
 	}	
@@ -411,14 +418,46 @@ void MOEA::select_best_candidate(vector<CIndividual *> &survivors, vector<CIndiv
 {
 	int best_index_lastfront = -1;//the index of current with the farthes improvement distance
 	double max_improvement = -INFINITY;
+	int contsur = 0; 
+	vector<CIndividual *> survivors_current;
+	 for(int i = 0 ; i < survivors.size(); i++)
+	  {
+		 if( survivors[i]->times_dominated==0) contsur++;
+		 if( survivors[i]->times_dominated>=0) survivors_current.push_back(survivors[i]);
+	  }
+	   if(contsur ==nobj) //precompute improvement distances if the asfa individuals are selected
+	   {
+		compute_distances_objective(candidates, survivors_current);
+	   }	   
+	  double bestvector = DBL_MAX;
 	  for(int i = 0 ; i < candidates.size(); i++)
 	    {
+	 	if(  contsur < nobj) //select the best asfa no-penalized individual...
+	        {
+		     if(candidates[i]->times_dominated != 0) continue; //just consider the first front
+		     double s = 0.0;	
+		     double maxv = -DBL_MAX;
+		     for(int k = 0; k < nobj; k++)
+		     {
+			double fi = candidates[i]->y_obj[k];
+			s += fi;
+			double ti = (k==contsur)?fi:1e5*fi;
+			if(ti > maxv)   maxv=ti;
+		     }
+			maxv = maxv + 0.0001*s;
+			if(bestvector > maxv)
+			{ best_index_lastfront = i; bestvector = maxv;}
+	        }
+		else // select the best improvement distance..
+		{
 		   if(candidates[i]->times_dominated != 0) continue;
+		   
 			if(  max_improvement < candidates[i]->neares_objective_distance  )
 			{
 				max_improvement = candidates[i]->neares_objective_distance;
 				best_index_lastfront= i;
 			}
+		}
 	    }
 	 if(best_index_lastfront == -1) return; //this occurs when the first m-survirvors are dominated bewteen them, thus there are not candidates availables to pick, therefore this iteration is skiped, so in the next iteration will be available some candidates...
 
@@ -491,8 +530,8 @@ void MOEA::exec_emo(int run)
 	nfes      = 0;
 	init_population(); //Initialize individuals...
 
-	sprintf(filename1,"%s/POS/Scalability/POS_VSD-MOEA_%s_RUN_%d_seed_%d_nvar_%d_nobj_%d.dat_bounded_Di_%lf_nfes_%lld",currentPATH, strTestInstance,run, seed, nvar, nobj, Initial_lowest_distance_factor/sqrt(nvar), max_nfes);
-	sprintf(filename2,"%s/POF/Scalability/POF_VSD-MOEA_%s_RUN_%d_seed_%d_nvar_%d_nobj_%d.dat_bounded_Di_%lf_nfes_%lld",currentPATH, strTestInstance,run, seed, nvar, nobj, Initial_lowest_distance_factor/sqrt(nvar), max_nfes);
+	sprintf(filename1,"%s/POS/POS_VSD-MOEA_%s_RUN_%d_seed_%d_nvar_%d_nobj_%d.dat_bounded_Di_%lf_nfes_%lld",currentPATH, strTestInstance,run, seed, nvar, nobj, Initial_lowest_distance_factor/sqrt(nvar), max_nfes);
+	sprintf(filename2,"%s/POF/POF_VSD-MOEA_%s_RUN_%d_seed_%d_nvar_%d_nobj_%d.dat_bounded_Di_%lf_nfes_%lld",currentPATH, strTestInstance,run, seed, nvar, nobj, Initial_lowest_distance_factor/sqrt(nvar), max_nfes);
 	save_front(filename2); //save the objective space information
 	save_pos(filename1); //save the decision variable space information
         long long nfes1 = nfes, nfes2 = nfes;
@@ -505,13 +544,13 @@ void MOEA::exec_emo(int run)
 	    
 	    nfes2 = nfes;
 	   countnfes += (nfes2 - nfes1);
-	//   if(  countnfes > 0.1*max_nfes  )
-	//    {	
-	//      countnfes -= 0.1*max_nfes;
-        //      save_front(filename2); //save the objective space information
-	//      save_pos(filename1); //save the decision variable space information
-	//      cout << "nfes... "<< nfes <<endl;
-	//    }
+	   if(  countnfes > 0.1*max_nfes  )
+	    {	
+	      countnfes -= 0.1*max_nfes;
+              save_front(filename2); //save the objective space information
+	      save_pos(filename1); //save the decision variable space information
+//	      cout << "nfes... "<< nfes <<endl;
+	    }
 	}
 	save_pos(filename1); //save the decision variable space information
         save_front(filename2); //save the objective space information
