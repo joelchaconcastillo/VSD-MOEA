@@ -138,7 +138,9 @@ void MOEA::evol_population()
 	//update the diversity-factor-parameter...	
 	update_diversity_factor();
 	//Pre-computing the neares distances both objective and decision spaces..
+        select_first_survivors(survivors, candidates);
 	compute_distances_variable(candidates, survivors);
+	compute_distances_objective(candidates, survivors);
 
        	while( survivors.size() < pops )
 	{
@@ -228,6 +230,7 @@ void MOEA::update_domianted_information(vector<CIndividual*> &survivors, vector<
 	   firstfrontcurrent = false;
 	  select_first_survivors(survivors, candidates);
 	  penalize_nearest(candidates, penalized);//penalize the nearest individuals.. 
+	  compute_distances_objective(candidates, survivors);
 	}
     }
 }
@@ -414,6 +417,7 @@ void MOEA::compute_distances_objective(vector<CIndividual *> &candidates, vector
 	    candidates[i]->neares_objective_distance = INFINITY;
 	   for(int j = 0; j < survivors.size(); j++)
 	   {
+		if(survivors[j]->times_dominated == 0)
 		candidates[i]->neares_objective_distance = min( candidates[i]->neares_objective_distance, distance_improvement(survivors[j]->y_obj, candidates[i]->y_obj));
 	   }
 	}	
@@ -426,7 +430,6 @@ void MOEA::select_best_candidate(vector<CIndividual *> &survivors, vector<CIndiv
 	  for(int i = 0 ; i < candidates.size(); i++)
 	    {
 		   if(candidates[i]->times_dominated != 0) continue;
-		   
 			if(  max_improvement < candidates[i]->neares_objective_distance  )
 			{
 				max_improvement = candidates[i]->neares_objective_distance;
@@ -519,13 +522,13 @@ void MOEA::exec_emo(int run)
 	    
 	    nfes2 = nfes;
 	   countnfes += (nfes2 - nfes1);
-	//   if(  countnfes > 0.1*max_nfes  )
-	//    {	
-	//      countnfes -= 0.1*max_nfes;
-        //      save_front(filename2); //save the objective space information
-	//      save_pos(filename1); //save the decision variable space information
-//	//      cout << "nfes... "<< nfes <<endl;
-	//    }
+	   if(  countnfes > 0.1*max_nfes  )
+	    {	
+	      countnfes -= 0.1*max_nfes;
+              save_front(filename2); //save the objective space information
+	      save_pos(filename1); //save the decision variable space information
+	      cout << "nfes... "<< nfes <<endl;
+	    }
 	}
 	save_pos(filename1); //save the decision variable space information
         save_front(filename2); //save the objective space information
