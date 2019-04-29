@@ -75,11 +75,12 @@ MOEA::~MOEA()
 }
 double MOEA::distance( vector<double> &a, vector<double> &b)
 {
-	double dist = 0 ;
+	double dist = INFINITY ;
    for(int i = 0; i < a.size(); i++)
 	{
 	   double factor = (a[i]-b[i])/(vuppBound[i] - vlowBound[i]);
-	   dist += factor*factor;
+		dist = min(dist, factor*factor);
+	   //dist += factor*factor;
 	}
    return sqrt(dist);
 }
@@ -142,22 +143,17 @@ void MOEA::evol_population()
         select_first_survivors(survivors, candidates);
 	compute_distances_variable(candidates, survivors);
 	compute_distances_objective(candidates, survivors);
-	bool flag = false;
+
        	while( survivors.size() < pops )
 	{
-//	cout << nfes<< "penalized... " << penalized.size() << " candidates... "<<candidates.size() <<endl;
+	//cout << nfes<< "penalized... " << penalized.size() << " candidates... "<<candidates.size() <<endl;
 	  penalize_nearest(candidates, penalized);//penalize the nearest individuals.. 
-//	 if( !flag){ cout << penalized.size()<<endl; flag=true;}
 	  if(candidates.empty())	  
-	    {
-	    // compute_distances_variable(penalized, survivors);
 	     select_farthest_penalized(survivors, penalized);//in case that all the individuals are penalized pick up the farstest and add it to survirvors
-	     }
 	  else
 	    {
 	     update_domianted_information(survivors, candidates, penalized); //update the rank of each candidate whitout penalized
 	     select_best_candidate(survivors, candidates, penalized); // the best candidate is selected considering the improvemente distance, and the rank..
-	     //compute_distances_variable(candidates, survivors);
 	    }
 	}
 	fast_non_dominated_sorting(survivors);//rank the survivors individuals..
@@ -270,22 +266,9 @@ void MOEA::back_select_first_survivors(vector<CIndividual*> &survivors, vector<C
 	           {
 			if( j != indxmaxim) // Avoid to be updated by itself..
 		        {
-			   for(int l = 0; l < nvar; l++)
-		  	   {
-		   	     //candidates[j]->nearest_variable_distance += candidates[j]->vec_nearest_variable_distance[l]*candidates[i]->vec_nearest_variable_distance[l];
-		    	     candidates[j]->vec_nearest_variable_distance[l] = min(candidates[j]->vec_nearest_variable_distance[l], fabs((candidates[j]->x_var[l]-candidates[indxmaxim]->x_var[l])/(vuppBound[l]-vlowBound[l])  ));
-			   }
-		           candidates[j]->nearest_variable_distance = 0;
-		           candidates[j]->nearest_variable_distance = INFINITY;
-		          for(int l = 0; l < nvar; l++)
-		          {
-		           //  candidates[j]->nearest_variable_distance += candidates[j]->vec_nearest_variable_distance[l]*candidates[j]->vec_nearest_variable_distance[l];
-		             candidates[j]->nearest_variable_distance = min(candidates[j]->nearest_variable_distance, candidates[j]->vec_nearest_variable_distance[l]);
-		          }
-		   	   candidates[j]->nearest_variable_distance = sqrt(candidates[j]->nearest_variable_distance);
+			 candidates[j]->nearest_variable_distance = min( candidates[j]->nearest_variable_distance, distance(candidates[j]->x_var, candidates[indxmaxim]->x_var ) );
 			}
 		   }
-
 		   survivors.push_back( candidates[indxmaxim]);
 		   iter_swap(candidates.begin()+indxmaxim, candidates.end()-1);
 		   candidates.pop_back();
@@ -416,7 +399,7 @@ void MOEA::computing_dominate_information(vector <CIndividual*> &pool)
 void MOEA::update_diversity_factor()
 {
 	double ratio = ((double) nfes)/max_nfes;
-	lowestDistanceFactor = Initial_lowest_distance_factor - Initial_lowest_distance_factor*(ratio/0.9);
+	lowestDistanceFactor = Initial_lowest_distance_factor - Initial_lowest_distance_factor*(ratio/0.5);
 }
 void MOEA::reproduction(vector<CIndividual> &population, vector<CIndividual> &child_pop)
 {
@@ -460,28 +443,11 @@ void MOEA::binary_tournament_selection(vector<CIndividual > &population, vector<
 }
 void MOEA::compute_distances_variable(vector<CIndividual *> &candidates, vector<CIndividual *> &survivors)
 {
-	//vector<vector<double>> Distance(candidates.size(), vector<double> (nvar,INFINITY));
 	for(int i = 0; i < candidates.size(); i++)
 	{
-	    for(int l = 0; l < nvar; l++) candidates[i]->vec_nearest_variable_distance[l] = INFINITY;
-	    //candidates[i]->nearest_variable_distance = INFINITY;
+	    candidates[i]->nearest_variable_distance = INFINITY;
 	   for(int j = 0; j < survivors.size(); j++)
-	//	candidates[i]->nearest_variable_distance = min( candidates[i]->nearest_variable_distance, distance(candidates[i]->x_var, survivors[j]->x_var));
-	   {
-		for(int l = 0; l < nvar; l++)
-		{
-		   //Distance[i][l] = min(Distance[i][l], fabs(candidates[i]->x_var[l]-survivors[j]->x_var[l]));
-		    candidates[i]->vec_nearest_variable_distance[l] = min(candidates[i]->vec_nearest_variable_distance[l], fabs(  (candidates[i]->x_var[l]-survivors[j]->x_var[l])/(vuppBound[l]-vlowBound[l])) );
-		}
-	   }
-		candidates[i]->nearest_variable_distance = 0;
-		candidates[i]->nearest_variable_distance = INFINITY;
-		for(int l = 0; l < nvar; l++)
-		{
-		   //candidates[i]->nearest_variable_distance += candidates[i]->vec_nearest_variable_distance[l]*candidates[i]->vec_nearest_variable_distance[l];
-		   candidates[i]->nearest_variable_distance = min(candidates[i]->nearest_variable_distance, candidates[i]->vec_nearest_variable_distance[l]);
-		}
-		   candidates[i]->nearest_variable_distance = sqrt(candidates[i]->nearest_variable_distance);
+		candidates[i]->nearest_variable_distance = min( candidates[i]->nearest_variable_distance, distance(candidates[i]->x_var, survivors[j]->x_var));
 	}	
 
 }
@@ -518,38 +484,14 @@ void MOEA::select_best_candidate(vector<CIndividual *> &survivors, vector<CIndiv
 	   {
 		if( i != best_index_lastfront) // Avoid to be updated by itself..
 	        {
-		   // candidates[i]->nearest_variable_distance = min( candidates[i]->nearest_variable_distance, distance(candidates[i]->x_var, candidates[best_index_lastfront]->x_var ) );
-		   candidates[i]->neares_objective_distance = min( candidates[i]->neares_objective_distance, distance_improvement(candidates[best_index_lastfront]->y_obj, candidates[i]->y_obj));
-	           for(int l = 0; l < nvar; l++)
-		   {
-		        candidates[i]->vec_nearest_variable_distance[l] = min(candidates[i]->vec_nearest_variable_distance[l], fabs(  (candidates[i]->x_var[l]-candidates[best_index_lastfront]->x_var[l])/(vuppBound[l]-vlowBound[l])) );
-		   }
-	           candidates[i]->nearest_variable_distance = 0;
-	           candidates[i]->nearest_variable_distance = INFINITY;
-		   for(int l = 0; l < nvar; l++)
-		   {
-		   //   candidates[i]->nearest_variable_distance += candidates[i]->vec_nearest_variable_distance[l]*candidates[i]->vec_nearest_variable_distance[l];
-		      candidates[i]->nearest_variable_distance = min(candidates[i]->nearest_variable_distance, candidates[i]->vec_nearest_variable_distance[l]);
-		   }
-		   candidates[i]->nearest_variable_distance = sqrt(candidates[i]->nearest_variable_distance);
+		 candidates[i]->nearest_variable_distance = min( candidates[i]->nearest_variable_distance, distance(candidates[i]->x_var, candidates[best_index_lastfront]->x_var ) );
+		 candidates[i]->neares_objective_distance = min( candidates[i]->neares_objective_distance, distance_improvement(candidates[best_index_lastfront]->y_obj, candidates[i]->y_obj));
 		}
 	   }
 	  for(int i = 0 ; i < penalized.size(); i++)
 	  {
-		//penalized[i]->nearest_variable_distance = min( penalized[i]->nearest_variable_distance, distance( penalized[i]->x_var, candidates[best_index_lastfront]->x_var ) )  ;
-		   penalized[i]->neares_objective_distance  =  min( penalized[i]->neares_objective_distance, distance_improvement(candidates[best_index_lastfront]->y_obj, penalized[i]->y_obj));
-		   for(int l = 0; l < nvar; l++)
-		   {
-		       penalized[i]->vec_nearest_variable_distance[l] = min(penalized[i]->vec_nearest_variable_distance[l], fabs(  (penalized[i]->x_var[l]-candidates[best_index_lastfront]->x_var[l])/(vuppBound[l]-vlowBound[l])) );
-		   }
-	           penalized[i]->nearest_variable_distance = 0;
-	           penalized[i]->nearest_variable_distance = INFINITY;
-		   for(int l = 0; l < nvar; l++)
-		   {
-		    //  penalized[i]->nearest_variable_distance += penalized[i]->vec_nearest_variable_distance[l]*penalized[i]->vec_nearest_variable_distance[l];
-		      penalized[i]->nearest_variable_distance = min(penalized[i]->nearest_variable_distance, penalized[i]->vec_nearest_variable_distance[l]);
-		   }
-		   penalized[i]->nearest_variable_distance = sqrt(penalized[i]->nearest_variable_distance);
+		penalized[i]->nearest_variable_distance = min( penalized[i]->nearest_variable_distance, distance( penalized[i]->x_var, candidates[best_index_lastfront]->x_var ) )  ;
+		penalized[i]->neares_objective_distance  =  min( penalized[i]->neares_objective_distance, distance_improvement(candidates[best_index_lastfront]->y_obj, penalized[i]->y_obj));
 	  }
 	  survivors.push_back(candidates[best_index_lastfront]);
 	  iter_swap(candidates.begin()+best_index_lastfront, candidates.end()-1);
@@ -570,23 +512,10 @@ void MOEA::select_farthest_penalized(vector<CIndividual *> &survivors, vector<CI
 
 	for(int i = 0 ; i < (int)penalized.size(); i++) //update the nearest distance once that the penalized is moved to candidate (thereafter to survivors)
 	{
-	   if( i != index_largestDCN )
-	   {
-		//penalized[i]->nearest_variable_distance = min( penalized[i]->nearest_variable_distance, distance( penalized[i]->x_var, penalized[index_largestDCN]->x_var));
-		for(int l = 0; l < nvar; l++)
-		{
-		    penalized[i]->vec_nearest_variable_distance[l] = min(penalized[i]->vec_nearest_variable_distance[l], fabs(  (penalized[i]->x_var[l]-penalized[index_largestDCN]->x_var[l])/(vuppBound[l]-vlowBound[l])) );
-		}
-	        penalized[i]->nearest_variable_distance = 0;
-	        penalized[i]->nearest_variable_distance = INFINITY;
-		for(int l = 0; l < nvar; l++)
-		{
-		   //penalized[i]->nearest_variable_distance += penalized[i]->vec_nearest_variable_distance[l]*penalized[i]->vec_nearest_variable_distance[l];
-		   penalized[i]->nearest_variable_distance = min(penalized[i]->nearest_variable_distance, penalized[i]->vec_nearest_variable_distance[l]);
-		}
-		   penalized[i]->nearest_variable_distance = sqrt(penalized[i]->nearest_variable_distance);
-	   }
+		if( i != index_largestDCN )
+		penalized[i]->nearest_variable_distance = min( penalized[i]->nearest_variable_distance, distance( penalized[i]->x_var, penalized[index_largestDCN]->x_var));
 	}	
+
 	survivors.push_back(penalized[index_largestDCN]);
 	iter_swap(penalized.begin()+index_largestDCN, penalized.end()-1);
 	penalized.pop_back();
@@ -620,8 +549,10 @@ void MOEA::exec_emo(int run)
 	nfes      = 0;
 	init_population(); //Initialize individuals...
 
-	sprintf(filename1,"%s/POS/mindist/POS_VSD-MOEA_%s_RUN_%d_seed_%d_nvar_%d_nobj_%d.dat_bounded_Di_%lf_nfes_%lld",currentPATH, strTestInstance,run, seed, nvar, nobj, Initial_lowest_distance_factor, max_nfes);
-	sprintf(filename2,"%s/POF/mindist/POF_VSD-MOEA_%s_RUN_%d_seed_%d_nvar_%d_nobj_%d.dat_bounded_Di_%lf_nfes_%lld",currentPATH, strTestInstance,run, seed, nvar, nobj, Initial_lowest_distance_factor, max_nfes);
+	sprintf(filename1,"%s/POS/POS_VSD-MOEA_%s_RUN_%d_seed_%d_nvar_%d_nobj_%d.dat_bounded_Di_%lf_nfes_%lldDF50P",currentPATH, strTestInstance,run, seed, nvar, nobj, Initial_lowest_distance_factor/sqrt(nvar), max_nfes);
+	//sprintf(filename1,"%s/POS/mindist/POS_VSD-MOEA_%s_RUN_%d_seed_%d_nvar_%d_nobj_%d.dat_bounded_Di_%lf_nfes_%lld",currentPATH, strTestInstance,run, seed, nvar, nobj, Initial_lowest_distance_factor/sqrt(nvar), max_nfes);
+	sprintf(filename2,"%s/POF/POF_VSD-MOEA_%s_RUN_%d_seed_%d_nvar_%d_nobj_%d.dat_bounded_Di_%lf_nfes_%lld_DF50P",currentPATH, strTestInstance,run, seed, nvar, nobj, Initial_lowest_distance_factor/sqrt(nvar), max_nfes);
+	//sprintf(filename2,"%s/POF/mindist/POF_VSD-MOEA_%s_RUN_%d_seed_%d_nvar_%d_nobj_%d.dat_bounded_Di_%lf_nfes_%lld",currentPATH, strTestInstance,run, seed, nvar, nobj, Initial_lowest_distance_factor/sqrt(nvar), max_nfes);
 	save_front(filename2); //save the objective space information
 	save_pos(filename1); //save the decision variable space information
         long long nfes1 = nfes, nfes2 = nfes;
@@ -641,7 +572,6 @@ void MOEA::exec_emo(int run)
 	      save_pos(filename1); //save the decision variable space information
 	      cout << "nfes... "<< nfes <<endl;
 	    }
-//	      cout << "nfes... "<< nfes <<endl;
 	}
 	save_pos(filename1); //save the decision variable space information
         save_front(filename2); //save the objective space information
