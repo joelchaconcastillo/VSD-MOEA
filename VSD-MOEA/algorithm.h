@@ -143,11 +143,12 @@ void MOEA::evol_population()
         select_first_survivors(survivors, candidates);
 	compute_distances_variable(candidates, survivors);
 	compute_distances_objective(candidates, survivors);
-
+	bool flag  = true;
        	while( survivors.size() < pops )
 	{
 	//cout << nfes<< "penalized... " << penalized.size() << " candidates... "<<candidates.size() <<endl;
 	  penalize_nearest(candidates, penalized);//penalize the nearest individuals.. 
+	//  if(flag){cout<<penalized.size() <<endl; flag=false;}
 	  if(candidates.empty())	  
 	     select_farthest_penalized(survivors, penalized);//in case that all the individuals are penalized pick up the farstest and add it to survirvors
 	  else
@@ -399,7 +400,7 @@ void MOEA::computing_dominate_information(vector <CIndividual*> &pool)
 void MOEA::update_diversity_factor()
 {
 	double ratio = ((double) nfes)/max_nfes;
-	lowestDistanceFactor = Initial_lowest_distance_factor - Initial_lowest_distance_factor*(ratio/0.8);
+	lowestDistanceFactor = Initial_lowest_distance_factor - Initial_lowest_distance_factor*(ratio/0.85);
 }
 void MOEA::reproduction(vector<CIndividual> &population, vector<CIndividual> &child_pop)
 {
@@ -484,8 +485,8 @@ void MOEA::select_best_candidate(vector<CIndividual *> &survivors, vector<CIndiv
 	   {
 		if( i != best_index_lastfront) // Avoid to be updated by itself..
 	        {
-		 candidates[i]->nearest_variable_distance = min( candidates[i]->nearest_variable_distance, distance(candidates[i]->x_var, candidates[best_index_lastfront]->x_var ) );
-		 candidates[i]->neares_objective_distance = min( candidates[i]->neares_objective_distance, distance_improvement(candidates[best_index_lastfront]->y_obj, candidates[i]->y_obj));
+		 candidates[i]->nearest_variable_distance = max( candidates[i]->nearest_variable_distance, distance(candidates[i]->x_var, candidates[best_index_lastfront]->x_var ) );
+		 candidates[i]->neares_objective_distance = max( candidates[i]->neares_objective_distance, distance_improvement(candidates[best_index_lastfront]->y_obj, candidates[i]->y_obj));
 		}
 	   }
 	  for(int i = 0 ; i < penalized.size(); i++)
