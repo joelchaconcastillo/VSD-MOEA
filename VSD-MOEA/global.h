@@ -46,7 +46,7 @@ int		etax    = 2, 	etam    = 50;   // distribution indexes of crossover and muta
 
 double  realx=0.9,  realm = -1.0;    // crossover, mutation, selection probabilities
 int run;
-
+double EPS2=1e-10;
 
 
 #endif

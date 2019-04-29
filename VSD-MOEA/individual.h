@@ -14,6 +14,7 @@ public:
 	vector <CIndividual *> ptr_dominate;
 	int    rank;
 	double nearest_variable_distance;
+	vector<double> vec_nearest_variable_distance;
 	double neares_objective_distance;
 	double times_dominated;
 	void   rnd_init();
@@ -31,6 +32,7 @@ CIndividual::CIndividual()
 {
 	x_var = vector<double>(nvar, 0);
         y_obj = vector<double>(nobj, 0);
+        vec_nearest_variable_distance = vector<double>(nvar, INFINITY);
 	rank = 0;
 }
 CIndividual::~CIndividual()

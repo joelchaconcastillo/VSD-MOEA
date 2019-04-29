@@ -75,11 +75,12 @@ MOEA::~MOEA()
 }
 double MOEA::distance( vector<double> &a, vector<double> &b)
 {
-	double dist = 0 ;
+	double dist = INFINITY ;
    for(int i = 0; i < a.size(); i++)
 	{
 	   double factor = (a[i]-b[i])/(vuppBound[i] - vlowBound[i]);
-	   dist += factor*factor;
+		dist = min(dist, factor*factor);
+	   //dist += factor*factor;
 	}
    return sqrt(dist);
 }
@@ -398,7 +399,7 @@ void MOEA::computing_dominate_information(vector <CIndividual*> &pool)
 void MOEA::update_diversity_factor()
 {
 	double ratio = ((double) nfes)/max_nfes;
-	lowestDistanceFactor = Initial_lowest_distance_factor - Initial_lowest_distance_factor*(ratio/0.9);
+	lowestDistanceFactor = Initial_lowest_distance_factor - Initial_lowest_distance_factor*(ratio/0.5);
 }
 void MOEA::reproduction(vector<CIndividual> &population, vector<CIndividual> &child_pop)
 {
@@ -548,8 +549,10 @@ void MOEA::exec_emo(int run)
 	nfes      = 0;
 	init_population(); //Initialize individuals...
 
-	sprintf(filename1,"%s/POS/Scalability/POS_VSD-MOEA_%s_RUN_%d_seed_%d_nvar_%d_nobj_%d.dat_bounded_Di_%lf_nfes_%lld",currentPATH, strTestInstance,run, seed, nvar, nobj, Initial_lowest_distance_factor/sqrt(nvar), max_nfes);
-	sprintf(filename2,"%s/POF/Scalability/POF_VSD-MOEA_%s_RUN_%d_seed_%d_nvar_%d_nobj_%d.dat_bounded_Di_%lf_nfes_%lld",currentPATH, strTestInstance,run, seed, nvar, nobj, Initial_lowest_distance_factor/sqrt(nvar), max_nfes);
+	sprintf(filename1,"%s/POS/Scalability_ShortTerm/POS_VSD-MOEA_%s_RUN_%d_seed_%d_nvar_%d_nobj_%d.dat_bounded_Di_%lf_nfes_%lldDF50P",currentPATH, strTestInstance,run, seed, nvar, nobj, Initial_lowest_distance_factor/sqrt(nvar), max_nfes);
+	//sprintf(filename1,"%s/POS/mindist/POS_VSD-MOEA_%s_RUN_%d_seed_%d_nvar_%d_nobj_%d.dat_bounded_Di_%lf_nfes_%lld",currentPATH, strTestInstance,run, seed, nvar, nobj, Initial_lowest_distance_factor/sqrt(nvar), max_nfes);
+	sprintf(filename2,"%s/POF/Scalability_ShortTerm/POF_VSD-MOEA_%s_RUN_%d_seed_%d_nvar_%d_nobj_%d.dat_bounded_Di_%lf_nfes_%lld_DF50P",currentPATH, strTestInstance,run, seed, nvar, nobj, Initial_lowest_distance_factor/sqrt(nvar), max_nfes);
+	//sprintf(filename2,"%s/POF/mindist/POF_VSD-MOEA_%s_RUN_%d_seed_%d_nvar_%d_nobj_%d.dat_bounded_Di_%lf_nfes_%lld",currentPATH, strTestInstance,run, seed, nvar, nobj, Initial_lowest_distance_factor/sqrt(nvar), max_nfes);
 	save_front(filename2); //save the objective space information
 	save_pos(filename1); //save the decision variable space information
         long long nfes1 = nfes, nfes2 = nfes;
@@ -562,13 +565,13 @@ void MOEA::exec_emo(int run)
 	    
 	    nfes2 = nfes;
 	   countnfes += (nfes2 - nfes1);
-	//   if(  countnfes > 0.1*max_nfes  )
-	//    {	
-	//      countnfes -= 0.1*max_nfes;
-        //      save_front(filename2); //save the objective space information
-	//      save_pos(filename1); //save the decision variable space information
-	//      cout << "nfes... "<< nfes <<endl;
-	//    }
+	   if(  countnfes > 0.1*max_nfes  )
+	    {	
+	      countnfes -= 0.1*max_nfes;
+              save_front(filename2); //save the objective space information
+	      save_pos(filename1); //save the decision variable space information
+	      cout << "nfes... "<< nfes <<endl;
+	    }
 	}
 	save_pos(filename1); //save the decision variable space information
         save_front(filename2); //save the objective space information
