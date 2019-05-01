@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 	    for(int o = 0; o < nvar; o++)
 	    {
 		fscanf(summary, "%lf ",&information[l][o]);	
-	    //    information[l][o] /= (2.0*(o+1.0));
+	        information[l][o] /= (2.0*(o+1.0));
 	    //    information[l][o] =  (information[l][o]-100.0)/200.0;// (2.0*(o+1.0));
 	    }
 	  }
