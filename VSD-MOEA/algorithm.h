@@ -75,12 +75,12 @@ MOEA::~MOEA()
 }
 double MOEA::distance( vector<double> &a, vector<double> &b)
 {
-	double dist = INFINITY ;
+	double dist = 0.0 ;
    for(int i = 0; i < a.size(); i++)
 	{
 	   double factor = (a[i]-b[i])/(vuppBound[i] - vlowBound[i]);
-		dist = min(dist, factor*factor);
-	   //dist += factor*factor;
+	//	dist = min(dist, factor*factor);
+	   dist += factor*factor;
 	}
    return sqrt(dist);
 }
@@ -449,7 +449,6 @@ void MOEA::compute_distances_variable(vector<CIndividual *> &candidates, vector<
 	   for(int j = 0; j < survivors.size(); j++)
 		candidates[i]->nearest_variable_distance = min( candidates[i]->nearest_variable_distance, distance(candidates[i]->x_var, survivors[j]->x_var));
 	}	
-
 }
 void MOEA::compute_distances_objective(vector<CIndividual *> &candidates, vector<CIndividual *> &survivors)
 {
@@ -565,9 +564,9 @@ void MOEA::exec_emo(int run)
 	    
 	    nfes2 = nfes;
 	   countnfes += (nfes2 - nfes1);
-	   if(  countnfes > 0.01*max_nfes  )
+	   if(  countnfes > 0.0001*max_nfes  )
 	    {	
-	      countnfes -= 0.01*max_nfes;
+	      countnfes -= 0.0001*max_nfes;
               save_front(filename2); //save the objective space information
 	      save_pos(filename1); //save the decision variable space information
 	      cout << "nfes... "<< nfes <<endl;
