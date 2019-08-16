@@ -564,7 +564,7 @@ void MOEA::exec_emo(int run)
 	    
 	    nfes2 = nfes;
 	   countnfes += (nfes2 - nfes1);
-	   if(  countnfes > 0.001*max_nfes  )
+	//   if(  countnfes > 0.001*max_nfes  )
 	    {	
 	      countnfes -= 0.001*max_nfes;
               save_front(filename2); //save the objective space information
