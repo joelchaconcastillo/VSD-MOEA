@@ -128,7 +128,6 @@ void MOEA::operator=(const MOEA &alg)
 void MOEA::evol_population()
 {
 	vector<CIndividual *> penalized, survivors;
-//	cout << "generation "<<endl;
 	//join the offspring and parent populations
 	vector<CIndividual *> candidates;
 	for(int i = 0; i < pops; i++)
@@ -146,7 +145,6 @@ void MOEA::evol_population()
 
        	while( survivors.size() < pops )
 	{
-	//cout << nfes<< "penalized... " << penalized.size() << " candidates... "<<candidates.size() <<endl;
 	  penalize_nearest(candidates, penalized);//penalize the nearest individuals.. 
 	  if(candidates.empty())	  
 	     select_farthest_penalized(survivors, penalized);//in case that all the individuals are penalized pick up the farstest and add it to survirvors
@@ -277,74 +275,6 @@ void MOEA::back_select_first_survivors(vector<CIndividual*> &survivors, vector<C
 }
 void MOEA::select_first_survivors(vector<CIndividual*> &survivors, vector<CIndividual*> &candidates)
 {
-////////////////##1
-	//first compute the nadir point ideal vector...
-///        for(int m = 0; m < nobj; m++)
-/// 	{	
-///	   nadir[m] = -DBL_MAX;
-///	   for(int i = 0; i < candidates.size(); i++)
-///	   {
-///		nadir[m] = max(nadir[m], candidates[i]->y_obj[m]);
-///	   }
-///	}
-///        vector<vector< double > > artifitial_vectors(nobj, vector<double>(nobj));
-///        for(int m = 0; m < nobj; m++)
-///	{
-///           for(int m1 = 0; m1 < nobj; m1++)
-///	      artifitial_vectors[m][m1] = nadir[m1];
-///	      artifitial_vectors[m][m] = ideal[m];
-///	}
-//	for(int m = 0 ; m < nobj; m++)
-//	{
-//		int indxmaxim = 0 ;
-//		double bestvector = INFINITY;
-//		for(int i = 0; i <  candidates.size(); i++)
-//		 {	
-//			double maxv = candidates[i]->y_obj[m];// distance_improvement(artifitial_vectors[m], candidates[i]->y_obj);
-//		        if(bestvector > maxv )
-//		        { indxmaxim = i; bestvector = maxv;}
-//		 }
-//		survivors.push_back( candidates[indxmaxim]);
-//		iter_swap(candidates.begin()+indxmaxim, candidates.end()-1);
-//		candidates.pop_back();
-//	}
-//return;
-//////////////////##2
-////
-//	vector<bool> grid(candidates.size(), false);
-//	for(int m = 0 ; m < nobj; m++)
-//	{
-//		int indxmaxim = -1 ;
-//		double bestvector = -INFINITY;
-//		for(int i = 0; i <  candidates.size(); i++)
-//		 {	
-//			if(grid[i]) continue;
-//			double maxv = 0.0;
-//			for(int j = 0; j < candidates.size(); j++)
-//			{
-//			   if( i==j ) continue;
-//			   maxv += distance_improvement(candidates[j]->y_obj, candidates[i]->y_obj);
-//			}
-//			
-//		        if(bestvector < maxv )
-//		        { indxmaxim = i; bestvector = maxv;}
-//		 }
-//		if(indxmaxim==-1)break;
-//		survivors.push_back(candidates[indxmaxim]);
-//		iter_swap(candidates.begin()+indxmaxim, candidates.end()-1);
-//		candidates.pop_back();
-//		iter_swap(grid.begin()+indxmaxim, grid.end()-1);
-//		grid.pop_back();
-//		for(int i = 0; i <  candidates.size(); i++)
-//		{
-//		   if(grid[i])continue;
-//		   if( (*candidates[indxmaxim]) < (*candidates[i]) ) grid[i]=true;
-//		}
-//	
-//
-//	
-//	}
-////////////////##3
 	///Select the best improvement distance candidates....
 	for(int m = 0; m < nobj; m++)
 	{
@@ -564,7 +494,7 @@ void MOEA::exec_emo(int run)
 	    
 	    nfes2 = nfes;
 	   countnfes += (nfes2 - nfes1);
-	//   if(  countnfes > 0.001*max_nfes  )
+	   if(  countnfes > 0.001*max_nfes  )
 	    {	
 	      countnfes -= 0.001*max_nfes;
               save_front(filename2); //save the objective space information
